@@ -3,9 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#include <time.h>
 
 
 void writeIterationToOpenFile(FILE* fPtr, double* new_rk4) {
@@ -24,18 +22,15 @@ void writeIterationToOpenFile(FILE* fPtr, double* new_rk4) {
     double newKappa = Kappa(newDist, newTemp);
     double newDensity = P(newDist, newTemp);
     double new_dlogPdlogT = (newTemp / newDensity) * (dPdr(newRadius, newMass, newDist) / dTdr(newRadius, newMass, newDist, newTemp, newLum));
-
     double new_dTau = dtau(newRadius, newMass, newDist, newTemp, newLum);
-    /////////////
 
     
     // Allocates storage
-    char *dataLine = (char*)malloc( (12 * sizeof(double)) + (6 * sizeof(double))); // (6 * sizeof(double)) for the whitespace
+    char *dataLine = (char*)malloc( (12 * sizeof(double)) + (6 * sizeof(double)) ); // (6 * sizeof(double)) for the whitespace
     
     // Create the line of vectores to save into the file
     sprintf(dataLine, "%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\t", 
     newDist, newTemp, newMass, newLum, newTau, newRadius, new_dLdr, newKappa, newDensity, new_dlogPdlogT, new_dTau);
-
 
     fputs(dataLine, fPtr); // Write data to file
     fputs("\n", fPtr); // Write new line
@@ -50,37 +45,30 @@ double* func(double* dep_var, double radius, double h) {
     double mass = dep_var[2];
     double lum = dep_var[3];
 
-    double newDensity = dpdr(radius, mass, density, temp, lum);
-    double newTemp = dTdr(radius, mass, density, temp, lum);
-    double newMass = dMdr(radius, density);
-    double newLum = dLdr(radius, density, temp);
-    double newTau = dtaudr(density, temp);
-
-   
+    // Output vec is of order "Density, Temp, Mass, Lum, Tau"
     double* outputVec = malloc(5*sizeof(double));
-    outputVec[0] = h * newDensity;
-    outputVec[1] = h * newTemp;
-    outputVec[2] = h * newMass;
-    outputVec[3] = h * newLum;
-    outputVec[4] = h * newTau;
+    outputVec[0] = h * dpdr(radius, mass, density, temp, lum);
+    outputVec[1] = h * dTdr(radius, mass, density, temp, lum);
+    outputVec[2] = h * dMdr(radius, density);
+    outputVec[3] = h * dLdr(radius, density, temp);
+    outputVec[4] = h * dtaudr(density, temp);
 
     return outputVec;
 }
 
 
-double* rk4(double* y, double h) {
+double* rk4(double* result, double* y, double h) {
     // This is the runge kutta method. It runs the function func on the current 
     // dependant variable values and the radius
     // y: current values for dependent variables
     // r: radius, the independent variable
     // h: step-size
-
     double* inputVector = malloc(5*sizeof(double));
 
     // calculate k1
     double r = y[5];
     double* k1 = func(y, r, h);
-
+    
     // calculate k2
     for(int i = 0; i < 5; i++) inputVector[i] = y[i] + (k1[i]/2.0); 
     double* k2 = func(inputVector, r + h/2.0, h);
@@ -94,7 +82,7 @@ double* rk4(double* y, double h) {
     double* k4 = func(inputVector, r + h, h);
 
 
-    double* result = malloc(6*sizeof(double));
+    // double* result = malloc(6*sizeof(double));
 
     // This is the runge kutta formula 
     for(int i = 0; i < 5; i++) { 
@@ -102,7 +90,7 @@ double* rk4(double* y, double h) {
         result[i] = y[i] + (rkSum/6.0); 
     }
     result[5] = r + h;
-
+    
     // Free everything not needed
     free(inputVector);
     free(k1);
@@ -120,6 +108,7 @@ int opticalDepthLimit(double* newVars) {
 
     double new_dTau = dtau(newVars[5], newVars[2], newVars[0], newVars[1], newVars[3]);
 
+    // printf("%d %d --", new_dTau < 0.001, newVars[2] > 1e3 * M_SUN);
     if (new_dTau < 0.001 || newVars[2] > 1e3 * M_SUN) return 1;
     return 0;
 }
@@ -152,7 +141,8 @@ double* mainLoop(double radius, double density, double temp, int writeData) {
         // Overwrite
         for (int i = 0; i < 6; i++) { oldVars[i] = newVars[i]; }
     
-        newVars = rk4(oldVars, stepSize); 
+        rk4(newVars, oldVars, stepSize); 
+        // newVars = rk4(oldVars, stepSize); 
         if (writeData)  writeIterationToOpenFile(fPtr, newVars);
 
         // Finds the new dr (increment in radius) by checking if the temp is < 5e4
@@ -162,7 +152,7 @@ double* mainLoop(double radius, double density, double temp, int writeData) {
             stepSize = (0.001 * newVars[5]) + 1000;
         }
 
-    } while ( !opticalDepthLimit(newVars));
+    } while ( !opticalDepthLimit(newVars) );
 
     if (writeData)  fclose(fPtr); // Close file to save file data
 

@@ -7,7 +7,7 @@
 
 
 double* func(double* density, double temp, double h); // initial implementation of Eulers timestep
-double* rk4(double* y, double h); // initial implementation of Eulers timestep
+double* rk4(double* x, double* y, double h); // initial implementation of Eulers timestep
 
 int opticalDepthLimit(double* newVars); // 
 
