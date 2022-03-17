@@ -19,6 +19,7 @@
 #define FRAC_Z 0.02 // Metals mass fraction)
 #define GAMMA 5/3 // adiabatic constant
 #define M_SUN 1.989e30 // Kg
+#define OneEThreeM_SUN  1e3 * M_SUN // KG
 #define R_SUN 6.955e8 // meters
 #define L_SUN 3.827e26 // watts
 
@@ -27,7 +28,7 @@
 #define pi  3.14159265
 #define pi2 9.86960440
 
-#define mu 1/(2.0 * FRAC_X + 0.75 * FRAC_Y + 0.5 * FRAC_Z)
+#define mu 1/((2.0 * FRAC_X) + (0.75 * FRAC_Y) + (0.5 * FRAC_Z))
 #define r0 0.001  // m
 #define S 1.0  // error tolerance
 
@@ -44,4 +45,6 @@
 #define epsilon_epp ((1.07e-7 / 1.0e5) * FRAC_X*FRAC_X )
 #define epsilon_ecno ((8.24e-26 / 1.0e5) * FRAC_X*FRAC_X * 0.03 )
 #define stefanBoltRadii (4.0 * pi * STEF_BOLT)
+
+
 #endif
