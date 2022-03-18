@@ -1,9 +1,9 @@
 CC = gcc
-LD = gcc
-OPT = -O3 # -fopt-info-vec
+LD = gcc   
+OPT = -O3 -fopt-info-vec#-missed
 CFLAGS = -Wall -g $(OPT)
 # INCLUDES = -I/opt/X11/include
-LDFLAGS = -lm # -L/opt/X11/lib -lX11
+LDFLAGS = -lm -lpthread  #-L/opt/X11/lib -lX11
 # LDLIBS =
 
 RM = rm -f
@@ -13,7 +13,7 @@ NAME = starCreator
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(LD) $(OPT) $(OBJS) $(LDFLAGS) -o $(NAME)
+	$(LD) $(OPT) $(OBJS) $(LDFLAGS)  -o $(NAME)
 
 main.o: main.c const.h equations.h starGenerator.h generateHRD.h Makefile
 	$(CC) $(CFLAGS) -c main.c
