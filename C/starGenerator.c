@@ -34,13 +34,13 @@ void writeIterationToOpenFile(FILE* fPtr, int index, double new_rk4[], char *dat
 }
 
 
-void func(double* restrict dep_var, double radius, double h, double* restrict outputVec) {
+void func(double* restrict inputVec, double radius, double h, double* restrict outputVec) {
 
     // Extract array to individual variable names. Divide by divisor if needed by rk4
-    double density = dep_var[0];
-    double temp  = dep_var[1];
-    double mass = dep_var[2];
-    double lum = dep_var[3];
+    double density = inputVec[0];
+    double temp  = inputVec[1];
+    double mass = inputVec[2];
+    double lum = inputVec[3];
 
     double curKappa = Kappa(density, temp);
     double cur_dMdr = 4.0 * pi * radius * radius * density;
@@ -161,27 +161,28 @@ double* createStar(double radius, double density, double temp, int writeData) {
 
     int counter = 0;
     double stepSize = r0;
-    do {
-        rk4(vars, stepSize);
-        for(int i = 0; i < 6; i++) starData[counter*6 + i] = vars[i];
-        counter++;
 
-        if (counter == TEMPDATASIZE) {
-            /*
-                If writeData, then write all of starData to file so we can reset counter and overwrite. If
-                !writeData, then we don't care about data so flush starData. Due to some mathematical 
-                properties of the DEs in question, we only need the last few thousand to properly calculate 
-                radiativeStar. 
-            */
-            if (writeData) for (int i=0; i<counter; i++) writeIterationToOpenFile(fPtr, i, starData, dataLine);
-            else for (int j = 0; j < TEMPDATASIZE * 6; j++) starData[j] = 0; 
-            counter = 0;
+    do {
+        for (int j = 0; j < LOOP_UNROLL_FACTOR; j++) {
+            rk4(vars, stepSize);
+            for(int i = 0; i < 6; i++) starData[counter*6 + i] = vars[i];
+            counter++;
+
+            // Finds the new dr (increment in radius) by checking if the temp is < 5e4
+            stepSize = vars[1] < 5e4 ? (0.00001 * vars[5]) + 1000 : (0.001 * vars[5]) + 1000;
         }
 
-        // Finds the new dr (increment in radius) by checking if the temp is < 5e4
-        if (vars[1] < 5e4) stepSize = (0.00001 * vars[5]) + 1000;
-        else stepSize = (0.001 * vars[5]) + 1000;
-
+        if (counter >= TEMPDATASIZE) {
+                /*
+                    If writeData, then write all of starData to file so we can reset counter and overwrite. If
+                    !writeData, then we don't care about data so flush starData. Due to some mathematical 
+                    properties of the DEs in question, we only need the last few thousand to properly calculate 
+                    radiativeStar. 
+                */
+                if (writeData) for (int i=0; i<counter; i++) writeIterationToOpenFile(fPtr, i, starData, dataLine);
+                else for (int j = 0; j < TEMPDATASIZE * 6; j++) starData[j] = 0; 
+                counter = 0;
+        }
     } while ( !opticalDepthLimit(vars) );
     free (vars);    
 
