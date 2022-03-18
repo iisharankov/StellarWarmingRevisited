@@ -3,15 +3,21 @@
 #define starGenerator
 
 
-#define VECTORSIZE 5
+#define KROWS 5
+#define KCOLS 5
+#define TEMPDATASIZE 5000
 
 
-double* func(double* density, double temp, double h); // initial implementation of Eulers timestep
-double* rk4(double* x, double* y, double h); // initial implementation of Eulers timestep
+void writeIterationToOpenFile(FILE* fPtr, int index, double new_rk4[], char* dataLinee);
 
-int opticalDepthLimit(double* newVars); // 
+// RK4 functions
+void func(double* dep_var, double radius, double h, double* outputVec);
+void rk4(double* y, double h); 
 
-double* mainLoop(double radius, double density, double temp, int writeData); // 
-void writeIterationToOpenFile(FILE* fPtr, double* new_rk4);
+int opticalDepthLimit(double* newVars); 
+int radiativeStar(double* taus, int tauSize);
+
+
+double* createStar(double radius, double density, double temp, int writeData); // 
 
 #endif
