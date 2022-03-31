@@ -1,7 +1,6 @@
 #ifndef equations_h
 #define equations_h
 
-
 double P(const double density, const double temp); // initial implementation of Eulers timestep
 // static double dPdp(const double density, const double temp); // Pressure differentials
 double dPdT(const double density, const double temp);

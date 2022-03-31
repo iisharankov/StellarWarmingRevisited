@@ -40,6 +40,6 @@ int main() {
 
     // createStar(1000.0, 1000.0, pow(10, 6.6), 1);
     // bisectStar(1000.0, pow(10, 6.6));
-
+    
     return 0;
 }

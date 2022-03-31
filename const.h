@@ -4,6 +4,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+
 #define MASS_E 9.10938291e-31 // electron mass
 #define MASS_P 1.67262178e-27 // proton mass
 #define STEF_BOLT 5.670373e-8 // Stefan-Boltzmann constant
@@ -28,9 +29,11 @@
 #define pi  3.14159265
 #define pi2 9.86960440
 
+
 #define mu 1/((2.0 * FRAC_X) + (0.75 * FRAC_Y) + (0.5 * FRAC_Z))
 #define r0 0.001  // m
 #define S 1.0  // error tolerance
+
 
 
 // Define constants in equations
@@ -45,6 +48,5 @@
 #define epsilon_epp ((1.07e-7 / 1.0e5) * FRAC_X*FRAC_X )
 #define epsilon_ecno ((8.24e-26 / 1.0e5) * FRAC_X*FRAC_X * 0.03 )
 #define stefanBoltRadii (4.0 * pi * STEF_BOLT)
-
 
 #endif

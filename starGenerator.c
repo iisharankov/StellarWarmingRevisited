@@ -60,6 +60,7 @@ void rk4(double* restrict y, double h) {
     // y: current values for dependent variables
     // r: radius, the independent variable
     // h: step-size
+
     double array[KROWS][KCOLS];
 
     // calculate k1
@@ -206,5 +207,6 @@ double* createStar(double radius, double density, double temp, int writeData) {
 
     return output;
 }   
+
 
 

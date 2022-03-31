@@ -54,6 +54,7 @@ double flux(double* restrict starVars) {  // TODO: no self.Rstar index, just usi
 
 double* bisectStar(double h, double coreTemp) {
 
+
     double tol = 0.01;
     double starADensity = 0.3e3;
     double starBDensity = 500.0e3;
@@ -154,5 +155,6 @@ void createMainSequence(int numThreads, int numStars, double minCoreTemp, double
     // Free mallocs and close file
     free(dataLine);
     fclose(fPtr);
+
 }
 

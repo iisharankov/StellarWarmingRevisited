@@ -2,7 +2,6 @@
 #ifndef starGenerator
 #define starGenerator
 
-
 #define KROWS 5
 #define KCOLS 5
 #define TEMPDATASIZE 5000

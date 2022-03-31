@@ -2,7 +2,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-
 // Pressures
 double P(const double density, const double temp) {
 
@@ -15,6 +14,7 @@ double P(const double density, const double temp) {
 
     // Radiative Pressure
     double P_rad = (RAD_CONST / 3.0) * temp*temp*temp*temp;
+
 
     return P_deg + P_ig + P_rad;
 }
@@ -34,6 +34,7 @@ static double dPdp(const double density, const double temp) {
 double dPdT(const double density, const double temp) {
     double dPdT_ig = density * IdealGasFactor;
     double dPdT_rad = (4.0/3.0) * RAD_CONST * temp*temp*temp;
+
     return dPdT_ig + dPdT_rad;
 }
 
@@ -113,4 +114,5 @@ double dtau(const double radius, const double mass, const double density, const 
     if (dpdrSoln < 0) dpdrSoln *= -1.0; // Take absolute
 
     return (Kappa(density, temp) * (density * density)) / dpdrSoln;
+
 }
