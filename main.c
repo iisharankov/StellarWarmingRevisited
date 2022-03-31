@@ -36,7 +36,7 @@ int main() {
     // elapsed = (finish.tv_sec - start.tv_sec);
     // elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
     // printf("Total time was %.3f - Average time for %d star was %.3f seconds\n", elapsed,  stars, elapsed / 10.0);
-    createMainSequence(1, 100, pow(10.0, 6.6), pow(10.0, 7.4));
+    createMainSequence(12, 100, pow(10.0, 6.6), pow(10.0, 7.4));
 
     // createStar(1000.0, 1000.0, pow(10, 6.6), 1);
     // bisectStar(1000.0, pow(10, 6.6));
