@@ -2,48 +2,48 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-
 // Pressures
-double P(double density, double temp) {
+double P(const double density, const double temp) {
 
-    // Pressure degenerate - Eqn 5 in the project_description
-    double P_deg = (pow(3.0 * pi2, 2.0/3.0) * (HBAR * HBAR) * pow(density / MASS_P, 5.0/3.0)) / (5.0 * MASS_E);
+    // Degenerate Pressure
+    double dDivMp = density / MASS_P;
+    double P_deg = P_deg_const * cbrt(dDivMp*dDivMp*dDivMp*dDivMp*dDivMp);
 
-    // Pressure Ideal Gas
-    double P_ig = (K * temp * density) / (mu * MASS_P);
+    // Ideal Gas Pressure
+    double P_ig = (temp * density) * IdealGasFactor;
 
-    // Pressure Radiative
-    double P_rad = (1.0 / 3.0) * RAD_CONST * pow(temp, 4.0);
+    // Radiative Pressure
+    double P_rad = (RAD_CONST / 3.0) * temp*temp*temp*temp;
+
 
     return P_deg + P_ig + P_rad;
 }
 
 // Pressure differentials
-double dPdp(double density, double temp) {
+static double dPdp(const double density, const double temp) {
 
-    // Degenerate
-    double dPdp_deg = (pow(3.0 * pi2, 2.0/3.0) * pow(HBAR, 2.0) * pow(density / MASS_P, 2.0/3.0)  ) / (3.0 * MASS_P * MASS_E);
-
-    // Ideal Gas
-    double dPdp_ig = (K * temp) / (mu * MASS_P);
+    // Degenerate   
+    double dDivMp = density / MASS_P;
+    double dPdp_deg = dPdp_deg_const * cbrt(dDivMp*dDivMp);
+    double dPdp_ig = IdealGasFactor * temp;  // Ideal Gas
 
     return dPdp_deg + dPdp_ig;
 }
 
 
-double dPdT(double density, double temp) {
-    double dPdT_ig = (density * K) / (mu * MASS_P);
-    double dPdT_rad = (4.0 / 3.0) * RAD_CONST * pow(temp, 3.0);
+double dPdT(const double density, const double temp) {
+    double dPdT_ig = density * IdealGasFactor;
+    double dPdT_rad = (4.0/3.0) * RAD_CONST * temp*temp*temp;
+
     return dPdT_ig + dPdT_rad;
 }
 
 // Energy generation
-double epsilon(double density, double temp) {
-    // Value for epsilon, used often below
-    double epp = (1.07e-7) * (density / 1.0e5) * pow(FRAC_X, 2) * pow(temp / 1.0e6, 4.0);
-    double ecno = (8.24e-26) * (density / 1.0e5) * 0.03 * pow(FRAC_X, 2.0) * pow(temp / 1.0e6, 19.9);
+double epsilon(const double density, const double temp) {
+    double rTemp = temp / 1.0e6; // reducedTemp        
+
+    double epp = epsilon_epp * density * rTemp*rTemp*rTemp*rTemp;
+    double ecno = epsilon_ecno * density * pow(rTemp, 19.9);
 
     return epp + ecno;
 }
@@ -51,52 +51,68 @@ double epsilon(double density, double temp) {
 
 // Opacity
 double Kappa(double density, double temp) {
-    double Kes = 0.02 * (1.0 +  FRAC_X);
-    double Kff = 1.0e24 * ( FRAC_Z + 0.0001) * pow(density / 1.0e3, 0.7) * pow(temp, -3.5);
-    double Khminus = 2.5e-32 * ( FRAC_Z / 0.02) * pow(density / 1.0e3, 0.5) * pow(temp, 9.0);
+    double tempToPowThreeAndHalf =  temp*temp*temp*sqrt(temp);
+    double reducedDen = density / 1.0e3;
+    double tempToPowNine = temp*temp*temp*temp*temp*temp*temp*temp*temp;
 
-    return 1/ ( (1.0 / Khminus) + (1.0 / MAX(Kes, Kff)) );
+    double Kff = Kappa_Kff_const * pow(reducedDen, 0.7) / tempToPowThreeAndHalf; 
+    double Khmin = Kappa_Khmin_const * sqrt(reducedDen) * tempToPowNine;
+
+    double max_result = MAX(Kappa_Kes_const, Kff);
+    return (Khmin * max_result)/(Khmin + max_result);
 }
 
-double dTdr(double radius, double mass, double density, double temp, double lum) {
-    // second equation in the set of 5 equations in the project description file
-    double dTdr_rad = (3.0 * Kappa(density, temp) * density * lum) / (
-                16.0 * pi * RAD_CONST * C * (temp * temp * temp) * (radius * radius));
 
-    double dTdr_conv = (1.0 - (1.0 / GAMMA)) * (temp / P(density, temp)) * (
+// Stellar Structure ODEs //
+
+// dTdr = change in temperature over radius
+double dTdr(const double radius, const double mass, const double density, const double temp, const double lum, double curKappa) {
+    // second equation in the set of 5 equations in the project description file
+    double radiative = (3.0 * curKappa * density * lum) / (
+        16.0 * pi * RAD_CONST * C * (temp * temp * temp) * (radius * radius));
+
+    double convection = (1.0 - (1.0 / GAMMA)) * (temp / P(density, temp)) * (
                 (G * mass * density) / (radius * radius));
 
-    return - MIN(dTdr_rad, dTdr_conv);
+    return - MIN(radiative, convection);
 }
 
-// Stellar Structure ODEs
-double dpdr(double radius, double mass, double density, double temp, double lum) {
+
+// dpdr = change in density over radius
+double dpdr(const double radius, const double mass, const double density, const double temp, const double lum, double curKappa) {
     // First last equation in the set of 5 equations in the project description file
-    return -((G * mass * density / pow(radius, 2.0)) +
-             dPdT(density, temp) * dTdr(radius, mass, density, temp, lum)) / (dPdp(density, temp));
+    return -((G * mass * density / (radius*radius)) +
+             dPdT(density, temp) * dTdr(radius, mass, density, temp, lum, curKappa)) / (dPdp(density, temp));
 }
 
+// dMdr = change in mass over radius
+// double dMdr(const double radius, const double density) {
+//     // middle last equation in the set of 5 equations in the project description file
+//     return 4.0 * pi * radius * radius * density;
+// }
 
-double dMdr(double radius, double density) {
-    // middle last equation in the set of 5 equations in the project description file
-    return 4.0 * pi * (radius * radius) * density;
-}
-
-double dLdr(double radius, double density, double temp) {
+// DLdr = change in luminosity over radius
+double dLdr(const double radius, const double density, const double temp) {
     // Second last equation in the set of 5 equations in the project description file
-    return dMdr(radius, density) * epsilon(density, temp);
+    const double dMdr = 4.0 * pi * radius * radius * density;
+    return dMdr * epsilon(density, temp);
 }
 
-double dtaudr(double density, double temp) {
-    // Last equation in the set of 5 equations in the project description file
-    return Kappa(density, temp) * density;
-}
+// double dtaudr(const double density, const double temp) {
+//     // Last equation in the set of 5 equations in the project description file
+//     return Kappa(density, temp) * density;
+// }
 
-double dPdr(double radius, double mass, double density) {
-    return -(G * mass * density / (radius * radius));
-}
+// dPdr = change in pressure over radius
+// double dPdr(const double radius, const double mass, const double density) {
+//     return -(G * mass * density / (radius * radius));
+// }
 
 // delta(tau) for optical depth limit
-double dtau(double radius, double mass, double density, double temp, double lum) {
-    return (Kappa(density, temp) * (density * density)) / (double)(-(dpdr(radius, mass, density, temp, lum)));
+double dtau(const double radius, const double mass, const double density, const double temp, const double lum, double curKappa) {
+    double dpdrSoln = dpdr(radius, mass, density, temp, lum, curKappa);
+    if (dpdrSoln < 0) dpdrSoln *= -1.0; // Take absolute
+
+    return (Kappa(density, temp) * (density * density)) / dpdrSoln;
+
 }

@@ -1,22 +1,20 @@
 #ifndef equations_h
 #define equations_h
 
-
-
-double P(double density, double temp); // initial implementation of Eulers timestep
-double dPdp(double density, double temp); // Pressure differentials
-double dPdT(double density, double temp);
-double epsilon(double density, double temp); //Energy generation
-double Kappa(double density, double temp); // Opacity
+double P(const double density, const double temp); // initial implementation of Eulers timestep
+// static double dPdp(const double density, const double temp); // Pressure differentials
+double dPdT(const double density, const double temp);
+double epsilon(const double density, const double temp); //Energy generation
+double Kappa(const double density, const double temp); // Opacity
 
 // Stellar Structure ODEs
-double dpdr(double radius, double mass, double density, double temp, double lum);
-double dTdr(double radius, double mass, double density, double temp, double lum);
-double dMdr(double radius, double density);
+double dpdr(const double radius, const double mass, const double density, const double temp, const double lum, double curKappa);
+double dTdr(const double radius, const double mass, const double density, const double temp, const double lum, double curKappa);
+double dMdr(const double radius, const double density);
 
-double dLdr(double radius, double density, double temp);
-double dtaudr(double density, double temp);
-double dPdr(double radius, double mass, double density);
-double dtau(double radius, double mass, double density, double temp, double lum);  // delta(tau) for optical depth limit
+double dLdr(const double radius, const double density, const double temp);
+double dtaudr(const double density, const double temp);
+// double dPdr(const double radius, const double mass, const double density);
+double dtau(const double radius, const double mass, const double density, const double temp, const double lum, double curKappa);  // delta(tau) for optical depth limit
 
 #endif
