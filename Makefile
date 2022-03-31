@@ -13,8 +13,7 @@ NAME = starCreator
 all: $(NAME)
 
 $(NAME): $(OBJS)
-$(LD) $(OPT) $(OBJS) $(LDFLAGS)  -o $(NAME)
-
+	$(LD) $(OPT) $(OBJS) $(LDFLAGS)  -o $(NAME)
 
 main.o: main.c const.h equations.h starGenerator.h generateHRD.h Makefile
 	$(CC) $(CFLAGS) -c main.c
